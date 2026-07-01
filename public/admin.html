@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Funeral Home Agent Admin</title>
+  <link rel="stylesheet" href="/admin.css" />
+</head>
+<body>
+  <main class="admin-shell">
+    <header class="admin-header">
+      <div>
+        <p class="eyebrow">Production Controls</p>
+        <h1>Funeral Home Agent Admin</h1>
+      </div>
+      <div class="header-actions">
+        <a class="btn ghost" href="/">Open App</a>
+        <button class="btn ghost" id="btnLogout">Sign Out</button>
+      </div>
+    </header>
+
+    <section class="panel login-panel" id="loginPanel">
+      <h2>Sign In</h2>
+      <p class="muted">This page uses real session authentication. Default local seed: admin@funeralhome.com / admin123.</p>
+      <div class="grid two">
+        <label>Email<input id="loginEmail" type="email" value="admin@funeralhome.com" /></label>
+        <label>Password<input id="loginPassword" type="password" value="admin123" /></label>
+      </div>
+      <button class="btn" id="btnLogin">Sign In</button>
+    </section>
+
+    <section class="summary-grid" id="summaryGrid" style="display:none">
+      <div class="metric"><span>Signed In</span><strong id="signedInAs">-</strong></div>
+      <div class="metric"><span>Tenant</span><strong id="tenantName">-</strong></div>
+      <div class="metric"><span>Plan</span><strong id="planName">-</strong></div>
+      <div class="metric"><span>AI Docs This Month</span><strong id="aiDocsCount">-</strong></div>
+    </section>
+
+    <section class="panel" id="statusPanel" style="display:none">
+      <div class="panel-head">
+        <h2>Launch Readiness</h2>
+        <button class="btn ghost" id="btnRefresh">Refresh</button>
+      </div>
+      <div class="status-grid" id="statusGrid"></div>
+    </section>
+
+    <section class="panel" id="tenantPanel" style="display:none">
+      <div class="panel-head">
+        <h2>Tenant Isolation</h2>
+        <span class="muted">Each funeral home has its own organization_id.</span>
+      </div>
+      <div class="grid four">
+        <label>Organization Name<input id="orgName" placeholder="New Funeral Home" /></label>
+        <label>Slug<input id="orgSlug" placeholder="new-funeral-home" /></label>
+        <label>Admin Email<input id="orgAdminEmail" placeholder="owner@example.com" /></label>
+        <label>Initial Password<input id="orgAdminPassword" type="password" placeholder="Temporary password" /></label>
+      </div>
+      <button class="btn" id="btnCreateOrg">Create Tenant</button>
+      <div class="table-wrap"><table><thead><tr><th>Name</th><th>Org ID</th><th>Plan</th><th>Users</th><th>Cases</th><th>Status</th></tr></thead><tbody id="orgBody"></tbody></table></div>
+    </section>
+
+    <section class="grid two panels-row" id="opsPanels" style="display:none">
+      <div class="panel">
+        <h2>Users in Current Tenant</h2>
+        <div class="table-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody id="usersBody"></tbody></table></div>
+      </div>
+      <div class="panel">
+        <h2>Backups</h2>
+        <button class="btn" id="btnBackup">Create Backup</button>
+        <div class="table-wrap"><table><thead><tr><th>Status</th><th>Created</th><th>Path</th></tr></thead><tbody id="backupBody"></tbody></table></div>
+      </div>
+    </section>
+
+    <section class="panel" id="billingPanel" style="display:none">
+      <div class="panel-head">
+        <h2>Billing Controls</h2>
+        <span class="muted">Admin/director only: recharge balance, payment settings, and Stripe subscription controls.</span>
+      </div>
+      <div class="summary-grid compact" id="billingSummary">
+        <div class="metric"><span>Balance</span><strong id="billingBalance">$0</strong></div>
+        <div class="metric"><span>Payments</span><strong id="paymentsEnabled">Disabled</strong></div>
+        <div class="metric"><span>Provider</span><strong id="paymentProvider">Stripe</strong></div>
+        <div class="metric"><span>Mode</span><strong id="paymentMode">Test</strong></div>
+      </div>
+      <div class="grid two">
+        <div>
+          <h3>Adjust Recharge Balance</h3>
+          <div class="grid two">
+            <label>Amount Change<input id="adjustAmount" type="number" step="0.01" placeholder="100 or -25" /></label>
+            <label>Reason<input id="adjustNote" placeholder="Manual credit, refund, correction" /></label>
+          </div>
+          <button class="btn" id="btnAdjustBalance">Apply Adjustment</button>
+        </div>
+        <div>
+          <h3>Payment Settings</h3>
+          <div class="grid two">
+            <label>Provider<select id="paymentProviderInput"><option value="stripe">Stripe</option><option value="manual">Manual</option><option value="bank_transfer">Bank Transfer</option></select></label>
+            <label>Mode<select id="paymentModeInput"><option value="test">Test</option><option value="live">Live</option></select></label>
+            <label>Enabled<select id="paymentsEnabledInput"><option value="0">Disabled</option><option value="1">Enabled</option></select></label>
+            <label>Public Key<input id="paymentPublicKey" placeholder="pk_test_..." /></label>
+          </div>
+          <label>Payment Instructions<textarea id="paymentInstructions" rows="3" placeholder="ACH, wire, check, or payment link instructions"></textarea></label>
+          <button class="btn" id="btnSavePaymentSettings">Save Payment Settings</button>
+        </div>
+      </div>
+      <div class="grid two">
+        <label>Plan<select id="stripePlan"><option value="starter">Starter</option><option value="professional" selected>Professional</option><option value="enterprise">Enterprise</option></select></label>
+        <label>Checkout URL<input id="checkoutUrl" readonly /></label>
+      </div>
+      <button class="btn" id="btnCheckout">Create Checkout Session</button>
+      <div class="table-wrap"><table><thead><tr><th>Amount</th><th>Method</th><th>Status</th><th>Created</th><th>Note</th><th>Action</th></tr></thead><tbody id="rechargeBody"></tbody></table></div>
+    </section>
+
+    <section class="panel" id="plansPanel" style="display:none">
+      <div class="panel-head">
+        <h2>Package Pricing</h2>
+        <span class="muted">Controls the customer payment packages shown in the app.</span>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Package</th><th>Monthly</th><th>Cases</th><th>AI Docs</th><th>Case Overage</th><th>Doc Overage</th><th>Stripe Price ID</th><th>Action</th></tr></thead><tbody id="plansBody"></tbody></table></div>
+    </section>
+
+    <section class="panel" id="legalPanel" style="display:none">
+      <h2>Policies</h2>
+      <div class="link-row">
+        <a href="/privacy" target="_blank">Privacy Policy</a>
+        <a href="/terms" target="_blank">Terms of Service</a>
+        <a href="/refund-policy" target="_blank">Refund / Cancellation</a>
+        <a href="/disclaimer" target="_blank">AI Disclaimer</a>
+      </div>
+    </section>
+  </main>
+  <div class="toast" id="toast"></div>
+  <script src="/admin.js"></script>
+</body>
+</html>

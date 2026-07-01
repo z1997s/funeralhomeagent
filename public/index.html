@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Funeral Home Agent — US Market</title>
+  <script>
+    if (location.protocol === 'file:') {
+      location.replace('http://localhost:3001/');
+    }
+  </script>
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <span class="brand-icon">◇</span>
+        <span class="brand-text">Funeral Home Agent</span>
+      </div>
+      <p class="brand-sub">US funeral workflow</p>
+    </div>
+
+    <button class="btn-new-case" id="btnNewCase" data-action="new">
+      <span>+</span> New Case
+    </button>
+
+    <nav class="nav-list" id="navList">
+      <button class="nav-item active" data-view="dashboard">
+        <span class="nav-icon">◈</span> Dashboard
+      </button>
+      <button class="nav-item" data-view="cases">
+        <span class="nav-icon">◇</span> Cases
+      </button>
+      <button class="nav-item" data-view="pricing">
+        <span class="nav-icon">$</span> Pricing & GPL
+      </button>
+      <button class="nav-item" data-view="preneed">
+        <span class="nav-icon">◈</span> Pre-Need
+      </button>
+      <button class="nav-item" data-view="memorials">
+        <span class="nav-icon">✦</span> Memorials
+      </button>
+      <button class="nav-item" data-view="inventory">
+        <span class="nav-icon">▤</span> Inventory
+      </button>
+      <button class="nav-item" data-view="users">
+        <span class="nav-icon">◎</span> Team
+      </button>
+    </nav>
+
+    <div class="case-list-panel" id="caseListPanel">
+      <div class="case-list-header">Recent Cases</div>
+      <div class="case-list" id="caseList">
+        <div class="case-list-empty">No cases yet.</div>
+      </div>
+    </div>
+
+    <div class="sidebar-footer account-footer">
+      <div class="account-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Signed out</span>
+      </div>
+      <div class="account-user" id="accountUser">Sign in to load tenant data.</div>
+      <div class="usage-mini" id="usageMini">
+        <span>AI Docs</span>
+        <strong id="usageMiniValue">- / -</strong>
+      </div>
+      <div class="account-actions">
+        <button class="sidebar-auth-btn" id="btnSidebarLogin">Sign In</button>
+        <button class="sidebar-auth-btn secondary" id="btnSidebarRegister">Register</button>
+        <button class="sidebar-auth-btn secondary" id="btnSidebarLogout" style="display:none">Sign Out</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main" id="main">
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <section class="view active" id="viewDashboard">
+      <div class="dashboard">
+        <header class="view-header">
+          <div>
+            <p class="view-eyebrow">Overview</p>
+            <h2 class="view-title">Dashboard</h2>
+          </div>
+          <div class="view-actions">
+            <button class="btn-outline" id="btnQuickSupport">Contact Support</button>
+            <button class="btn-primary" id="btnQuickRecharge">Recharge</button>
+            <button class="btn-primary" data-action="new">+ New Case</button>
+          </div>
+        </header>
+
+        <div class="stat-grid" id="statGrid">
+          <div class="stat-card"><div class="stat-num" id="statOpenCases">0</div><div class="stat-label">Open Cases</div></div>
+          <div class="stat-card"><div class="stat-num" id="statTodayCases">0</div><div class="stat-label">Today</div></div>
+          <div class="stat-card"><div class="stat-num" id="statTotalCases">0</div><div class="stat-label">Total Cases</div></div>
+          <div class="stat-card"><div class="stat-num" id="statRevenue">$0</div><div class="stat-label">Revenue</div></div>
+          <div class="stat-card"><div class="stat-num" id="statPreNeed">0</div><div class="stat-label">Active Pre-Need</div></div>
+        </div>
+        <div class="dash-section">
+          <h3>Status Breakdown</h3>
+          <div id="statusBreakdown" class="status-bars"></div>
+        </div>
+
+        <div class="dash-section">
+          <h3>Grief Support Resources</h3>
+          <div id="griefResources" class="resource-grid"></div>
+        </div>
+
+        <div class="dash-section">
+          <h3>FTC Funeral Rule Compliance</h3>
+          <div class="compliance-card">
+            <p>The Funeral Rule requires you to provide a <strong>General Price List (GPL)</strong> to anyone who asks in person. Key requirements:</p>
+            <ul>
+              <li>Provide GPL before discussing arrangements</li>
+              <li>Provide Casket Price List (CPL) and Outer Burial Container (OBC) Price List</li>
+              <li>Do <strong>not</strong> misrepresent legal/crematory requirements</li>
+              <li>Do <strong>not</strong> require casket purchase for direct cremation</li>
+              <li>Do <strong>not</strong> bundle required purchases</li>
+              <li>Use the Pricing &amp; GPL section to manage your price lists</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ CASES LIST ═══ -->
+    <section class="view" id="viewCases">
+      <div class="cases-view">
+        <header class="view-header">
+          <div>
+            <p class="view-eyebrow">Cases</p>
+            <h2 class="view-title">All Cases</h2>
+          </div>
+          <div class="view-actions">
+            <button class="btn-primary" data-action="new">+ New Case</button>
+          </div>
+        </header>
+        <div class="cases-table-wrap">
+          <table class="cases-table" id="casesTable">
+            <thead><tr><th>Name</th><th>Date of Death</th><th>Status</th><th>Created</th><th></th></tr></thead>
+            <tbody id="casesBody"></tbody>
+          </table>
+          <div class="cases-empty" id="casesEmpty">No cases yet. Create one to get started.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ FORM (New / Edit Case) ═══ -->
+    <section class="view" id="viewForm">
+      <div class="form-container">
+        <header class="view-header">
+          <div>
+            <p class="view-eyebrow" id="formEyebrow">New Case</p>
+            <h2 class="view-title">Deceased Information</h2>
+            <p class="view-desc">Enter the details you have. The more you provide, the better the generated documents.</p>
+          </div>
+          <div class="view-actions">
+            <span class="auto-save-indicator" id="autoSaveIndicator"></span>
+            <button class="btn-outline" id="btnFormCancel">Cancel</button>
+            <button class="btn-primary" id="btnFormSubmit">Save &amp; Generate Documents</button>
+          </div>
+        </header>
+
+        <div class="form-grid">
+          <fieldset>
+            <legend>Personal Information</legend>
+            <div class="field-row"><div class="field flex-2"><label>Full Legal Name *</label><input type="text" id="f-fullName" required /></div></div>
+            <div class="field-row trio">
+              <div class="field"><label>Age</label><input type="number" id="f-age" min="0" max="150" /></div>
+              <div class="field"><label>Date of Birth</label><input type="date" id="f-dob" /></div>
+              <div class="field"><label>Date of Death *</label><input type="date" id="f-dod" required /></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Place of Death</label><input type="text" id="f-pob" /></div>
+              <div class="field"><label>Residence (City, State)</label><input type="text" id="f-residence" /></div>
+            </div>
+            <div class="field-row"><div class="field flex-2"><label>Cause of Death</label><input type="text" id="f-cause" /></div></div>
+            <div class="field-row trio">
+              <div class="field"><label>Sex</label><select id="f-sex"><option value="">--</option><option>Male</option><option>Female</option></select></div>
+              <div class="field"><label>Marital Status</label><select id="f-marital"><option value="">--</option><option>Married</option><option>Widowed</option><option>Divorced</option><option>Single</option></select></div>
+              <div class="field"><label>Occupation</label><input type="text" id="f-occupation" /></div>
+            </div>
+            <div class="field-row"><div class="field flex-2"><label>Education / Alma Mater</label><input type="text" id="f-education" /></div></div>
+          </fieldset>
+          <fieldset>
+            <legend>Family</legend>
+            <div class="field-row"><div class="field flex-2"><label>Surviving Spouse</label><input type="text" id="f-spouse" /></div></div>
+            <div class="field-row"><div class="field flex-2"><label>Children (one per line)</label><textarea id="f-children" rows="3"></textarea></div></div>
+            <div class="field-row"><div class="field flex-2"><label>Grandchildren</label><input type="text" id="f-grandchildren" /></div></div>
+            <div class="field-row"><div class="field flex-2"><label>Predeceased by</label><textarea id="f-predeceased" rows="2"></textarea></div></div>
+            <div class="field-row">
+              <div class="field"><label>Father's Name</label><input type="text" id="f-father" /></div>
+              <div class="field"><label>Mother's Maiden Name</label><input type="text" id="f-mother" /></div>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Service Preferences</legend>
+            <div class="field-row">
+              <div class="field"><label>Obituary Tone</label><select id="f-tone"><option value="traditional">Traditional</option><option value="modern">Modern (Warmer)</option><option value="religious">Religious</option></select></div>
+              <div class="field"><label>Religion</label><input type="text" id="f-religion" /></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label>Disposition</label><select id="f-disposition"><option value="">--</option><option>Burial</option><option>Cremation</option><option>Entombment</option></select></div>
+              <div class="field"><label>Funeral Home</label><input type="text" id="f-funeralHome" /></div>
+            </div>
+            <div class="field-row"><div class="field flex-2"><label>Service Date & Time</label><input type="text" id="f-serviceDate" /></div></div>
+            <div class="field-row"><div class="field flex-2"><label>Service Location</label><input type="text" id="f-serviceLocation" /></div></div>
+            <div class="field-row"><div class="field flex-2"><label>Visitation Details</label><input type="text" id="f-visitation" /></div></div>
+            <div class="field-row"><div class="field flex-2"><label>Burial / Cemetery</label><input type="text" id="f-burial" /></div></div>
+          </fieldset>
+          <fieldset>
+            <legend>Additional Information</legend>
+            <div class="field-row"><div class="field flex-2"><label>Military Service</label><input type="text" id="f-military" /></div></div>
+            <div class="field-row"><div class="field flex-2"><label>Organizations</label><textarea id="f-organizations" rows="2"></textarea></div></div>
+            <div class="field-row"><div class="field flex-2"><label>Hobbies & Interests</label><textarea id="f-hobbies" rows="2"></textarea></div></div>
+            <div class="field-row"><div class="field flex-2"><label>Memorial Donations</label><input type="text" id="f-charities" /></div></div>
+            <div class="field-row"><div class="field flex-2"><label>Additional Notes</label><textarea id="f-notes" rows="3"></textarea></div></div>
+          </fieldset>
+        </div>
+        <div class="form-footer">
+          <button class="btn-outline" id="btnFormCancel2">Cancel</button>
+          <button class="btn-primary" id="btnFormSubmit2">Save &amp; Generate Documents</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ CASE DETAIL ═══ -->
+    <section class="view" id="viewCase">
+      <div class="case-container">
+        <header class="view-header case-header">
+          <div>
+            <p class="view-eyebrow" id="caseEyebrow">Case</p>
+            <h2 class="view-title" id="caseTitle">—</h2>
+            <p class="view-desc" id="caseSubtitle"></p>
+          </div>
+          <div class="view-actions">
+            <button class="btn-outline" data-action="cases">← All Cases</button>
+            <button class="btn-outline" id="btnEditCase">Edit Info</button>
+            <button class="btn-outline" id="btnViewTimeline">Timeline</button>
+            <button class="btn-danger" id="btnDelete">Delete</button>
+          </div>
+        </header>
+
+        <!-- Lifecycle status bar -->
+        <div class="lifecycle-bar" id="lifecycleBar"></div>
+
+        <!-- Case tabs -->
+        <div class="case-tabs" id="caseTabs">
+          <button class="case-tab active" data-tab="documents">Documents</button>
+          <button class="case-tab" data-tab="pricing">Pricing & Statement</button>
+          <button class="case-tab" data-tab="authorization">Cremation Auth</button>
+          <button class="case-tab" data-tab="benefits">SSA / VA</button>
+          <button class="case-tab" data-tab="memorial">Memorial</button>
+          <button class="case-tab" data-tab="timeline">Timeline</button>
+        </div>
+
+        <!-- Documents Tab -->
+        <div class="case-tab-content active" id="tabDocuments">
+          <div class="doc-tabs" id="docTabs">
+            <button class="doc-tab active" data-doc="obituary">Obituary</button>
+            <button class="doc-tab" data-doc="death_certificate">Death Cert</button>
+            <button class="doc-tab" data-doc="notifications">Notifications</button>
+            <button class="doc-tab" data-doc="checklist">Checklist</button>
+          </div>
+          <div class="doc-toolbar">
+            <button class="btn-outline-sm" id="btnEdit">Edit</button>
+            <button class="btn-outline-sm" id="btnRegenerate">Regenerate</button>
+            <button class="btn-outline-sm" id="btnCopy">Copy</button>
+            <button class="btn-outline-sm" id="btnPDF">PDF</button>
+          </div>
+          <div class="warning-banner" id="deathCertWarning">⚠️ This is a reference worksheet only. The official death certificate must be completed and signed by the attending physician or medical examiner.</div>
+          <div class="doc-body" id="docBody"><div class="doc-placeholder"><p>Select a case to view documents.</p></div></div>
+        </div>
+
+        <!-- Pricing Tab -->
+        <div class="case-tab-content" id="tabPricing">
+          <div class="pricing-panel">
+            <div class="pricing-header">
+              <h3>Selected Items & Services</h3>
+              <div class="pricing-actions">
+                <button class="btn-outline-sm" id="btnGenerateStatement">Generate FTC Statement</button>
+                <button class="btn-outline-sm" id="btnAddItem">+ Add Item</button>
+              </div>
+            </div>
+            <div id="selectionsList" class="selections-list">
+              <div class="doc-placeholder"><p>No items selected. Click "+ Add Item" to add services.</p></div>
+            </div>
+            <div class="selections-total" id="selectionsTotal"></div>
+
+            <div class="add-item-panel" id="addItemPanel" style="display:none">
+              <h4>Add Service / Product</h4>
+              <div class="field-row">
+                <div class="field flex-2">
+                  <label>Select Item</label>
+                  <select id="itemSelector" class="item-select"></select>
+                </div>
+                <div class="field"><label>Qty</label><input type="number" id="itemQty" value="1" min="1" style="width:60px" /></div>
+              </div>
+              <div class="btn-row">
+                <button class="btn-primary" id="btnConfirmItem">Add</button>
+                <button class="btn-outline" id="btnCancelItem">Cancel</button>
+              </div>
+            </div>
+
+            <div class="pricing-section">
+              <h4>Package Options</h4>
+              <div id="packageList" class="pkg-list"></div>
+            </div>
+
+            <div class="pricing-section">
+              <h4>FTC Statement Preview</h4>
+              <div id="statementPreview" class="stmt-preview"><p class="muted">Click "Generate FTC Statement" to preview the compliance document.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cremation Authorization Tab -->
+        <div class="case-tab-content" id="tabAuthorization">
+          <div class="auth-panel">
+            <h3>Cremation Authorization Form</h3>
+            <p class="view-desc">Complete this form when cremation is selected. Required by law in all 50 states.</p>
+            <div class="auth-form">
+              <div class="field-row">
+                <div class="field flex-2"><label>Authorizer Full Name *</label><input type="text" id="auth-name" /></div>
+                <div class="field"><label>Relationship *</label><input type="text" id="auth-rel" /></div>
+              </div>
+              <div class="field-row">
+                <div class="field flex-2"><label>Address</label><input type="text" id="auth-addr" /></div>
+                <div class="field"><label>Phone</label><input type="text" id="auth-phone" /></div>
+              </div>
+              <div class="field-row">
+                <div class="field"><label>Disposition Method</label><select id="auth-method"><option value="cremation">Cremation</option><option value="entombment">Entombment</option></select></div>
+                <div class="field"><label>Crematory Name</label><input type="text" id="auth-crematory" /></div>
+              </div>
+              <div class="field-row"><div class="field flex-2"><label>Special Instructions</label><textarea id="auth-instructions" rows="2"></textarea></div></div>
+              <div class="field-row">
+                <div class="field"><label>ID Type</label><select id="auth-idtype"><option value="">--</option><option>Driver's License</option><option>Passport</option><option>State ID</option><option>Military ID</option></select></div>
+                <div class="field"><label>ID Number</label><input type="text" id="auth-idnum" /></div>
+              </div>
+              <div class="field-row">
+                <label><input type="checkbox" id="auth-verified" /> ID verified</label>
+              </div>
+              <div class="btn-row">
+                <button class="btn-primary" id="btnSaveAuth">Save Authorization</button>
+                <button class="btn-outline-sm" id="btnSignAuth">Mark as Signed</button>
+                <button class="btn-outline-sm" id="btnPDFAuth">Export PDF</button>
+              </div>
+              <div id="authStatus" class="auth-status"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SSA / VA Tab -->
+        <div class="case-tab-content" id="tabBenefits">
+          <div class="benefits-panel">
+            <h3>SSA-721 — Statement of Death by Funeral Director</h3>
+            <p>The funeral home reports the death to Social Security using Form SSA-721.</p>
+            <button class="btn-outline-sm" id="btnGenerateSSA">Generate SSA-721 Reference</button>
+            <button class="btn-outline-sm" id="btnPDFSSA">Export PDF</button>
+            <div id="ssaContent" class="benefits-content"></div>
+
+            <h3 style="margin-top:32px">VA Burial Benefits Guide</h3>
+            <p>For veterans and eligible dependents.</p>
+            <button class="btn-outline-sm" id="btnGenerateVA">Generate VA Guide</button>
+            <button class="btn-outline-sm" id="btnPDFVA">Export PDF</button>
+            <div id="vaContent" class="benefits-content"></div>
+          </div>
+        </div>
+
+        <!-- Memorial Tab -->
+        <div class="case-tab-content" id="tabMemorial">
+          <div class="memorial-panel">
+            <h3>Online Memorial Page</h3>
+            <div class="field-row">
+              <div class="field flex-2"><label>Public Title</label><input type="text" id="mem-title" /></div>
+            </div>
+            <div class="field-row">
+              <div class="field flex-2"><label>Life Story</label><textarea id="mem-story" rows="8"></textarea></div>
+            </div>
+            <div class="btn-row">
+              <button class="btn-primary" id="btnSaveMemorial">Save Memorial</button>
+              <button class="btn-outline-sm" id="btnPublishMemorial">Publish</button>
+            </div>
+            <div class="mem-preview" id="memPreview">
+              <p class="muted">Save the memorial to see a preview.</p>
+            </div>
+            <h4>Guestbook Messages</h4>
+            <div id="memMessages" class="mem-messages"></div>
+          </div>
+        </div>
+
+        <!-- Timeline Tab -->
+        <div class="case-tab-content" id="tabTimeline">
+          <div class="timeline-panel">
+            <h3>Case Timeline</h3>
+            <div id="timelineEntries" class="timeline-list"></div>
+            <div class="tl-controls">
+              <h4>Update Status</h4>
+              <div class="field-row">
+                <div class="field"><label>New Status</label>
+                  <select id="tl-status">
+                    <option value="first_call">First Call</option>
+                    <option value="removal">Removal</option>
+                    <option value="arrangement_pending">Arrangement Scheduled</option>
+                    <option value="arrangement_done">Arrangement Done</option>
+                    <option value="service_planned">Service Planned</option>
+                    <option value="service_in_progress">Service In Progress</option>
+                    <option value="service_completed">Service Completed</option>
+                    <option value="post_service">Post-Service</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                </div>
+                <div class="field flex-2"><label>Note</label><input type="text" id="tl-note" /></div>
+              </div>
+              <button class="btn-primary" id="btnUpdateStatus">Update Status</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="disclaimer-section" id="disclaimerSection">
+          <p><strong>Disclaimer:</strong> All AI-generated content is a draft. All information must be independently verified for accuracy, completeness, and compliance with applicable laws before official use.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ PRICING & GPL ═══ -->
+    <section class="view" id="viewPricing">
+      <div class="pricing-view">
+        <header class="view-header">
+          <div><p class="view-eyebrow">FTC Compliance</p><h2 class="view-title">Pricing & GPL</h2></div>
+          <div class="view-actions">
+            <button class="btn-primary" id="btnPreviewGPL">Preview GPL</button>
+            <button class="btn-primary" id="btnAddPricingItem">+ Add Item</button>
+          </div>
+        </header>
+
+        <div class="pricing-layout">
+          <div class="pricing-col">
+            <div class="gpl-preview" id="gplPreview">
+              <h3>General Price List</h3>
+              <p class="muted">Click "Preview GPL" to generate the FTC-required price list.</p>
+            </div>
+          </div>
+          <div class="pricing-col">
+            <h3>All Items</h3>
+            <div class="pricing-items-list" id="pricingItemsList">
+              <div class="doc-placeholder"><p>Loading...</p></div>
+            </div>
+            <h3 style="margin-top:24px">Packages</h3>
+            <div class="pkg-items-list" id="pkgItemsList">
+              <div class="doc-placeholder"><p>Loading...</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ PRE-NEED ═══ -->
+    <section class="view" id="viewPreneed">
+      <div class="preneed-view">
+        <header class="view-header">
+          <div><p class="view-eyebrow">Pre-Planning</p><h2 class="view-title">Pre-Need Contracts</h2></div>
+          <div class="view-actions"><button class="btn-primary" id="btnNewPreneed">+ New Contract</button></div>
+        </header>
+        <div class="preneed-form" id="preneedForm" style="display:none">
+          <div class="field-row">
+            <div class="field flex-2"><label>Client Name *</label><input type="text" id="pn-name" /></div>
+            <div class="field"><label>Email</label><input type="text" id="pn-email" /></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Phone</label><input type="text" id="pn-phone" /></div>
+            <div class="field"><label>Package</label><select id="pn-pkg"></select></div>
+            <div class="field"><label>Total Amount</label><input type="number" id="pn-total" /></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Amount Paid</label><input type="number" id="pn-paid" /></div>
+            <div class="field"><label>Payment Plan</label><select id="pn-plan"><option value="lump_sum">Lump Sum</option><option value="installment">Installment</option><option value="trust">Trust</option></select></div>
+          </div>
+          <div class="field-row"><div class="field flex-2"><label>Notes</label><textarea id="pn-notes" rows="2"></textarea></div></div>
+          <div class="btn-row"><button class="btn-primary" id="btnSavePreneed">Save Contract</button><button class="btn-outline" id="btnCancelPreneed">Cancel</button></div>
+        </div>
+        <div class="preneed-table-wrap">
+          <table class="cases-table" id="preneedTable"><thead><tr><th>Client</th><th>Package</th><th>Total</th><th>Paid</th><th>Plan</th><th>Status</th><th>Date</th></tr></thead><tbody id="preneedBody"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ MEMORIALS ═══ -->
+    <section class="view" id="viewMemorials">
+      <div class="memorials-view">
+        <header class="view-header">
+          <div><p class="view-eyebrow">Online Tributes</p><h2 class="view-title">Memorials</h2></div>
+        </header>
+        <div class="memorials-grid" id="memorialsGrid"></div>
+      </div>
+    </section>
+
+    <!-- ═══ INVENTORY ═══ -->
+    <section class="view" id="viewInventory">
+      <div class="inventory-view">
+        <header class="view-header">
+          <div><p class="view-eyebrow">Stock</p><h2 class="view-title">Inventory</h2></div>
+          <div class="view-actions"><button class="btn-primary" id="btnAddInventory">+ Add Item</button></div>
+        </header>
+        <div class="inventory-form" id="inventoryForm" style="display:none">
+          <div class="field-row">
+            <div class="field"><label>Type</label><select id="inv-type"><option value="casket">Casket</option><option value="urn">Urn</option><option value="container">Container</option><option value="flower">Flower</option><option value="other">Other</option></select></div>
+            <div class="field flex-2"><label>Name</label><input type="text" id="inv-name" /></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>SKU</label><input type="text" id="inv-sku" /></div>
+            <div class="field"><label>Qty</label><input type="number" id="inv-qty" /></div>
+            <div class="field"><label>Reorder At</label><input type="number" id="inv-rl" /></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Cost Price</label><input type="number" id="inv-cost" /></div>
+            <div class="field"><label>Retail Price</label><input type="number" id="inv-retail" /></div>
+            <div class="field"><label>Supplier</label><input type="text" id="inv-supplier" /></div>
+          </div>
+          <div class="btn-row"><button class="btn-primary" id="btnSaveInventory">Save</button><button class="btn-outline" id="btnCancelInventory">Cancel</button></div>
+        </div>
+        <div class="inv-table-wrap">
+          <table class="cases-table" id="invTable"><thead><tr><th>Type</th><th>Name</th><th>SKU</th><th>Qty</th><th>Cost</th><th>Retail</th><th>Supplier</th><th></th></tr></thead><tbody id="invBody"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ TEAM ═══ -->
+    <section class="view" id="viewUsers">
+      <div class="users-view">
+        <header class="view-header">
+          <div><p class="view-eyebrow">Staff</p><h2 class="view-title">Team Management</h2><p class="view-desc">Email is the staff member's account identifier for future login, notifications, password reset, and assignment tracking. This version does not send email yet.</p></div>
+          <div class="view-actions"><button class="btn-primary" id="btnAddUser">+ Add User</button></div>
+        </header>
+        <div class="user-form" id="userForm" style="display:none">
+          <div class="field-row">
+            <div class="field flex-2"><label>Name</label><input type="text" id="user-name" /></div>
+            <div class="field"><label>Email</label><input type="text" id="user-email" /></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Role</label><select id="user-role"><option value="admin">Admin</option><option value="director">Director</option><option value="staff" selected>Staff</option><option value="viewer">Viewer</option></select></div>
+            <div class="field"><label>Initial Password</label><input type="password" id="user-password" placeholder="admin123" /></div>
+          </div>
+          <div class="btn-row"><button class="btn-primary" id="btnSaveUser">Save</button><button class="btn-outline" id="btnCancelUser">Cancel</button></div>
+        </div>
+        <div class="user-table-wrap">
+          <table class="cases-table" id="userTable"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody id="userBody"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+<!-- Modal -->
+<div id="modal" class="modal" style="display:none"><div class="modal-content" id="modalContent"><button class="modal-close" id="modalClose">×</button><div id="modalBody"></div></div></div>
+
+<script src="/app.js?v=20260630-admin6"></script>
+</body>
+</html>

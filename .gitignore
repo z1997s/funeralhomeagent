@@ -1,0 +1,7 @@
+.env
+node_modules/
+data/*
+!data/.gitkeep
+.playwright-cli/
+output/playwright/
+npm-debug.log*

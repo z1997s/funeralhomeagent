@@ -837,7 +837,7 @@ async function openRechargeModal() {
     <div class="billing-plan-grid">${planCards}</div>
     <div class="modal-section-title">Recent billing records</div>
     <div class="modal-list">${orderRows || '<p class="muted">No recharge records yet.</p>'}</div>
-    <div class="compliance-card login-note">Stripe Checkout is used when configured. In local mode, choosing a plan updates the tenant package so you can test limits and pricing.</div>
+    <div class="compliance-card login-note">${escHtml(billing.payment?.payment_instructions || 'Pay with the selected package link. Your account is activated after payment is reviewed by the operations team.')}</div>
     <div class="btn-row modal-actions"><button class="btn-outline" onclick="hideModal()">Close</button></div>
   `);
 
@@ -853,6 +853,23 @@ async function openRechargeModal() {
 
 async function chooseBillingPlan(planId, button) {
   try {
+    const manual = await api('/api/billing/manual-checkout', { method: 'POST', body: JSON.stringify({ plan_id: planId }) });
+    if (manual.url) {
+      window.open(manual.url, '_blank');
+      toast('Payment link opened. Your package will be activated after payment is confirmed.');
+    } else {
+      toast(manual.instructions || 'Payment request recorded. Contact support to complete payment.');
+    }
+    await openRechargeModal();
+    return;
+  } catch (manualError) {
+    if (!/Admin or director role required|Invalid plan/i.test(manualError.message || '')) {
+      toast(manualError.message || 'Failed to create payment request.', true);
+      return;
+    }
+  }
+
+  try {
     const checkout = await api('/api/billing/stripe/checkout', { method: 'POST', body: JSON.stringify({ plan_id: planId }) });
     if (checkout.url) {
       window.open(checkout.url, '_blank');
@@ -860,19 +877,7 @@ async function chooseBillingPlan(planId, button) {
       return;
     }
   } catch (e) {
-    try {
-      await api('/api/account/plan', { method: 'PUT', body: JSON.stringify({ plan_id: planId, status: 'trial' }) });
-      const me = await api('/api/auth/me');
-      state.organization = me.organization;
-      state.plan = me.plan;
-      hideModal();
-      updateSessionChrome();
-      await loadUsageMini();
-      toast('Plan updated. Configure Stripe keys in admin for live checkout.');
-      return;
-    } catch (fallbackError) {
-      toast(fallbackError.message, true);
-    }
+    toast(e.message || 'Payment is not configured. Contact support to activate this package.', true);
   } finally {
     if (button) {
       button.disabled = false;

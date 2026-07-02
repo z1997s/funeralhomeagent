@@ -94,12 +94,12 @@
         <div>
           <h3>Payment Settings</h3>
           <div class="grid two">
-            <label>Provider<select id="paymentProviderInput"><option value="stripe">Stripe</option><option value="manual">Manual</option><option value="bank_transfer">Bank Transfer</option></select></label>
+            <label>Provider<select id="paymentProviderInput"><option value="manual_link">Manual Payment Link</option><option value="worldfirst">WorldFirst / 万里汇</option><option value="paypal">PayPal</option><option value="stripe">Stripe</option><option value="manual">Manual</option><option value="bank_transfer">Bank Transfer</option></select></label>
             <label>Mode<select id="paymentModeInput"><option value="test">Test</option><option value="live">Live</option></select></label>
             <label>Enabled<select id="paymentsEnabledInput"><option value="0">Disabled</option><option value="1">Enabled</option></select></label>
             <label>Public Key<input id="paymentPublicKey" placeholder="pk_test_..." /></label>
           </div>
-          <label>Payment Instructions<textarea id="paymentInstructions" rows="3" placeholder="ACH, wire, check, or payment link instructions"></textarea></label>
+          <label>Payment Instructions<textarea id="paymentInstructions" rows="3" placeholder="Tell customers what happens after payment, e.g. pay with the link and wait for manual activation within one business day."></textarea></label>
           <button class="btn" id="btnSavePaymentSettings">Save Payment Settings</button>
         </div>
       </div>
@@ -108,7 +108,7 @@
         <label>Checkout URL<input id="checkoutUrl" readonly /></label>
       </div>
       <button class="btn" id="btnCheckout">Create Checkout Session</button>
-      <div class="table-wrap"><table><thead><tr><th>Amount</th><th>Method</th><th>Status</th><th>Created</th><th>Note</th><th>Action</th></tr></thead><tbody id="rechargeBody"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Amount</th><th>Package</th><th>Method</th><th>Status</th><th>Created</th><th>Note</th><th>Action</th></tr></thead><tbody id="rechargeBody"></tbody></table></div>
     </section>
 
     <section class="panel" id="plansPanel" style="display:none">
@@ -116,7 +116,7 @@
         <h2>Package Pricing</h2>
         <span class="muted">Controls the customer payment packages shown in the app.</span>
       </div>
-      <div class="table-wrap"><table><thead><tr><th>Package</th><th>Monthly</th><th>Cases</th><th>AI Docs</th><th>Case Overage</th><th>Doc Overage</th><th>Stripe Price ID</th><th>Action</th></tr></thead><tbody id="plansBody"></tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>Package</th><th>Monthly</th><th>Cases</th><th>AI Docs</th><th>Case Overage</th><th>Doc Overage</th><th>Stripe Price ID</th><th>One-time Payment Link</th><th>Action</th></tr></thead><tbody id="plansBody"></tbody></table></div>
     </section>
 
     <section class="panel" id="legalPanel" style="display:none">

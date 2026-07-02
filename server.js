@@ -270,6 +270,7 @@ function initDB() {
       id TEXT PRIMARY KEY,
       account_id TEXT NOT NULL REFERENCES billing_accounts(id),
       amount REAL NOT NULL DEFAULT 0,
+      plan_id TEXT DEFAULT '',
       payment_method TEXT NOT NULL DEFAULT 'manual',
       status TEXT NOT NULL DEFAULT 'completed' CHECK(status IN ('pending','completed','failed','cancelled')),
       note TEXT DEFAULT '',
@@ -301,7 +302,11 @@ function tableColumns(table) {
 
 function addColumnIfMissing(table, column, definition) {
   if (!tableColumns(table).includes(column)) {
-    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+    try {
+      db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+    } catch (err) {
+      if (!/duplicate column name/i.test(err.message || '')) throw err;
+    }
   }
 }
 
@@ -399,6 +404,8 @@ function migrateProductionSchema() {
   addColumnIfMissing('organizations', 'payment_instructions', `TEXT DEFAULT ''`);
   addColumnIfMissing('organizations', 'payments_enabled', `INTEGER DEFAULT 0`);
   addColumnIfMissing('subscription_plans', 'stripe_price_id', `TEXT DEFAULT ''`);
+  addColumnIfMissing('subscription_plans', 'manual_payment_url', `TEXT DEFAULT ''`);
+  addColumnIfMissing('recharge_orders', 'plan_id', `TEXT DEFAULT ''`);
 
   db.prepare(`INSERT OR IGNORE INTO organizations (id, name, slug, status, plan_id) VALUES (?, ?, ?, ?, ?)`)
     .run(DEFAULT_ORG_ID, 'Default Funeral Home', 'default', 'trial', DEFAULT_PLAN_ID);
@@ -1136,7 +1143,7 @@ app.put('/api/admin/plans/:id', (req, res) => {
   if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin role required' });
   const plan = db.prepare('SELECT id FROM subscription_plans WHERE id = ?').get(req.params.id);
   if (!plan) return res.status(404).json({ error: 'Plan not found' });
-  const fields = ['name', 'monthly_price', 'included_cases', 'included_ai_documents', 'overage_case_price', 'overage_document_price', 'features', 'stripe_price_id', 'active'];
+  const fields = ['name', 'monthly_price', 'included_cases', 'included_ai_documents', 'overage_case_price', 'overage_document_price', 'features', 'stripe_price_id', 'manual_payment_url', 'active'];
   const sets = [];
   const vals = [];
   for (const field of fields) {
@@ -1487,7 +1494,14 @@ app.get('/api/billing', (req, res) => {
       .run(uuidv4(), req.organizationId, req.organization?.name || 'Customer', 0);
     account = db.prepare('SELECT * FROM billing_accounts WHERE organization_id = ? ORDER BY created_at LIMIT 1').get(req.organizationId);
   }
-  const orders = db.prepare('SELECT * FROM recharge_orders WHERE account_id = ? ORDER BY created_at DESC LIMIT 50').all(account.id);
+  const orders = db.prepare(`
+    SELECT ro.*, sp.name as plan_name
+    FROM recharge_orders ro
+    LEFT JOIN subscription_plans sp ON sp.id = ro.plan_id
+    WHERE ro.account_id = ?
+    ORDER BY ro.created_at DESC
+    LIMIT 50
+  `).all(account.id);
   const payment = db.prepare(`SELECT payment_provider, payment_mode, payment_public_key, payment_instructions, payments_enabled,
     stripe_customer_id, stripe_subscription_id, subscription_current_period_end
     FROM organizations WHERE id = ?`).get(req.organizationId);
@@ -1517,6 +1531,36 @@ app.post('/api/billing/recharge', (req, res) => {
   tx();
   audit(req.user.id, 'recharge', 'billing_account', account.id, `Recharge ${numericAmount}`, req.organizationId);
   res.json({ id, amount: numericAmount, status: 'completed' });
+});
+
+app.post('/api/billing/manual-checkout', (req, res) => {
+  if (!['admin','director'].includes(req.user.role)) return res.status(403).json({ error: 'Admin or director role required' });
+  const { plan_id } = req.body || {};
+  const plan = db.prepare('SELECT * FROM subscription_plans WHERE id = ? AND active = 1').get(plan_id);
+  if (!plan) return res.status(400).json({ error: 'Invalid plan' });
+  let account = db.prepare('SELECT * FROM billing_accounts WHERE organization_id = ? ORDER BY created_at LIMIT 1').get(req.organizationId);
+  if (!account) {
+    db.prepare(`INSERT INTO billing_accounts (id, organization_id, account_name, balance) VALUES (?, ?, ?, ?)`)
+      .run(uuidv4(), req.organizationId, req.organization?.name || 'Customer', 0);
+    account = db.prepare('SELECT * FROM billing_accounts WHERE organization_id = ? ORDER BY created_at LIMIT 1').get(req.organizationId);
+  }
+  const org = db.prepare(`SELECT payment_provider, payment_instructions FROM organizations WHERE id = ?`).get(req.organizationId) || {};
+  const id = uuidv4();
+  const amount = Number(plan.monthly_price || 0);
+  const method = org.payment_provider && org.payment_provider !== 'stripe' ? org.payment_provider : 'manual_payment_link';
+  const note = `Manual checkout requested for ${plan.name} (${plan.id}). Confirm payment before activating.`;
+  db.prepare(`INSERT INTO recharge_orders (id, account_id, amount, plan_id, payment_method, status, note) VALUES (?, ?, ?, ?, ?, 'pending', ?)`)
+    .run(id, account.id, amount, plan.id, method, note);
+  audit(req.user.id, 'manual_checkout', 'recharge_order', id, `Requested ${plan.id}`, req.organizationId);
+  res.json({
+    id,
+    amount,
+    status: 'pending',
+    plan_id: plan.id,
+    plan_name: plan.name,
+    url: plan.manual_payment_url || '',
+    instructions: org.payment_instructions || ''
+  });
 });
 
 app.put('/api/billing/settings', (req, res) => {
@@ -1597,6 +1641,13 @@ app.put('/api/billing/recharge-orders/:id', (req, res) => {
     if (delta !== 0) {
       db.prepare(`UPDATE billing_accounts SET balance = balance + ?, updated_at = datetime('now') WHERE id = ?`)
         .run(delta, order.account_id);
+    }
+    if (nextStatus === 'completed' && order.plan_id) {
+      const plan = db.prepare('SELECT id FROM subscription_plans WHERE id = ? AND active = 1').get(order.plan_id);
+      if (plan) {
+        db.prepare(`UPDATE organizations SET plan_id = ?, status = 'active', updated_at = datetime('now') WHERE id = ?`)
+          .run(order.plan_id, req.organizationId);
+      }
     }
   });
   tx();

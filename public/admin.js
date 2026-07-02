@@ -107,6 +107,7 @@ function renderPlans(plans) {
       <td><input data-plan-field="${plan.id}:overage_case_price" type="number" step="0.01" value="${Number(plan.overage_case_price || 0)}" /></td>
       <td><input data-plan-field="${plan.id}:overage_document_price" type="number" step="0.01" value="${Number(plan.overage_document_price || 0)}" /></td>
       <td><input data-plan-field="${plan.id}:stripe_price_id" value="${escHtml(plan.stripe_price_id || '')}" /></td>
+      <td><input data-plan-field="${plan.id}:manual_payment_url" placeholder="https://..." value="${escHtml(plan.manual_payment_url || '')}" /></td>
       <td><button class="btn ghost" data-plan-save="${plan.id}">Save</button></td>
     </tr>
   `).join('');
@@ -133,6 +134,7 @@ function renderBilling(billing) {
   $('#rechargeBody').innerHTML = orders.map(order => `
     <tr>
       <td><input data-order-amount="${order.id}" type="number" step="0.01" value="${Number(order.amount || 0).toFixed(2)}" /></td>
+      <td>${escHtml(order.plan_name || order.plan_id || '-')}</td>
       <td>${escHtml(order.payment_method || 'manual')}</td>
       <td>${escHtml(order.status || 'completed')}</td>
       <td>${escHtml(order.created_at || '')}</td>
@@ -147,7 +149,7 @@ function renderBilling(billing) {
         <button class="btn ghost" data-order-save="${order.id}">Save</button>
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="6">No recharge records yet.</td></tr>';
+  `).join('') || '<tr><td colspan="7">No recharge records yet.</td></tr>';
 
   document.querySelectorAll('[data-order-save]').forEach(button => {
     button.addEventListener('click', () => {
@@ -267,6 +269,7 @@ async function savePlan(id) {
         overage_case_price: Number(fieldValue('overage_case_price')),
         overage_document_price: Number(fieldValue('overage_document_price')),
         stripe_price_id: fieldValue('stripe_price_id') || '',
+        manual_payment_url: fieldValue('manual_payment_url') || '',
       })
     });
     toast('Package pricing saved.');

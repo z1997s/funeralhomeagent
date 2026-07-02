@@ -715,14 +715,14 @@ async function loadPricing() {
       }
       const catLabels = { professional: 'Professional', facility: 'Facility', transportation: 'Transportation', casket: 'Caskets', container: 'Containers', cremation: 'Cremation', cemetery: 'Cemetery', merchandise: 'Merchandise', other: 'Other' };
       list.innerHTML = Object.entries(cats).map(([cat, catItems]) =>
-        `<div class="pricing-cat"><h4>${catLabels[cat] || cat}</h4>${catItems.map(i => `<div class="pricing-item-row"><span class="pi-name">${escHtml(i.name)}</span><span class="pi-price">$${i.price.toFixed(2)}</span><button class="btn-text" onclick="editPricingItem('${i.id}','${escHtml(i.name)}',${i.price},'${i.category}','${escHtml(i.description || '')}')">✎</button></div>`).join('')}</div>`
+        `<div class="pricing-cat"><h4>${catLabels[cat] || cat}</h4>${catItems.map(i => `<div class="pricing-item-row"><span class="pi-name">${escHtml(i.name)}</span><span class="pi-price">$${i.price.toFixed(2)}</span><button class="btn-text" onclick="editPricingItem('${i.id}','${escHtml(i.name)}',${i.price},'${i.category}','${escHtml(i.description || '')}')">✎</button><button class="btn-text danger" onclick="deletePricingItem('${i.id}','${escHtml(i.name)}')">Delete</button></div>`).join('')}</div>`
       ).join('');
     }
 
     const pkgs = await api('/api/pricing/packages');
     const pkgList = $('#pkgItemsList');
     if (pkgList) {
-      pkgList.innerHTML = pkgs.map(p => `<div class="pkg-card"><div class="pkg-card-head"><strong>${escHtml(p.name)}</strong><button class="btn-text" onclick="editPricingPackage('${p.id}')">✎</button></div><div class="pkg-price">$${p.total_price.toFixed(2)}</div><p class="muted">${escHtml(p.description || '')}</p><div class="pkg-items">${(p.items||[]).map(i => `<span class="pkg-item-tag">${escHtml(i.name)}</span>`).join('')}</div></div>`).join('');
+      pkgList.innerHTML = pkgs.map(p => `<div class="pkg-card"><div class="pkg-card-head"><strong>${escHtml(p.name)}</strong><span><button class="btn-text" onclick="editPricingPackage('${p.id}')">✎</button><button class="btn-text danger" onclick="deletePricingPackage('${p.id}','${escHtml(p.name)}')">Delete</button></span></div><div class="pkg-price">$${p.total_price.toFixed(2)}</div><p class="muted">${escHtml(p.description || '')}</p><div class="pkg-items">${(p.items||[]).map(i => `<span class="pkg-item-tag">${escHtml(i.name)}</span>`).join('')}</div></div>`).join('');
     }
   } catch (e) { /* silent */ }
 }
@@ -749,6 +749,20 @@ async function editPricingPackage(id) {
   await api(`/api/pricing/packages/${id}`, { method: 'PUT', body: JSON.stringify({ name, description, total_price }) });
   await loadPricing();
   toast('Package updated.');
+}
+
+async function deletePricingItem(id, name) {
+  if (!confirm(`Delete pricing item "${name}"? This will remove it from packages and case selections.`)) return;
+  await api(`/api/pricing/items/${id}`, { method: 'DELETE' });
+  await loadPricing();
+  toast('Pricing item deleted.');
+}
+
+async function deletePricingPackage(id, name) {
+  if (!confirm(`Delete package "${name}"?`)) return;
+  await api(`/api/pricing/packages/${id}`, { method: 'DELETE' });
+  await loadPricing();
+  toast('Package deleted.');
 }
 
 $('#btnPreviewGPL')?.addEventListener('click', async () => {
@@ -1157,12 +1171,23 @@ async function loadUsers() {
     const users = await api('/api/users');
     const body = $('#userBody');
     if (!body) return;
-    body.innerHTML = users.map(u => `<tr><td>${escHtml(u.name)}</td><td>${escHtml(u.email)}</td><td><span class="status-badge">${u.role}</span></td><td>${u.active ? 'Active' : 'Inactive'}</td><td><button class="btn-text" onclick="toggleUser('${u.id}','${u.active ? 0 : 1}')">${u.active ? 'Disable' : 'Enable'}</button></td></tr>`).join('');
+    body.innerHTML = users.map(u => `<tr><td>${escHtml(u.name)}</td><td>${escHtml(u.email)}</td><td><span class="status-badge">${u.role}</span></td><td>${u.active ? 'Active' : 'Inactive'}</td><td><button class="btn-text" onclick="toggleUser('${u.id}','${u.active ? 0 : 1}')">${u.active ? 'Disable' : 'Enable'}</button><button class="btn-text danger" onclick="deleteUser('${u.id}','${escHtml(u.email)}')">Delete</button></td></tr>`).join('');
   } catch (e) { /* silent */ }
 }
 
 function toggleUser(id, active) {
   api(`/api/users/${id}`, { method: 'PUT', body: JSON.stringify({ active: active == 1 }) }).then(() => loadUsers());
+}
+
+async function deleteUser(id, email) {
+  if (!confirm(`Delete user ${email}? This cannot be undone.`)) return;
+  try {
+    await api(`/api/users/${id}`, { method: 'DELETE' });
+    await loadUsers();
+    toast('User deleted.');
+  } catch (e) {
+    toast(e.message || 'Failed to delete user.', true);
+  }
 }
 
 $('#btnAddUser')?.addEventListener('click', () => { $('#userForm').style.display = 'block'; });

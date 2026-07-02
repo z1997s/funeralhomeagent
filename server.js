@@ -475,76 +475,77 @@ function migrateFromJSON() {
 migrateFromJSON();
 
 // ── Seed default pricing items ────────────────────────────
-function seedPricing() {
-  const cnt = db.prepare('SELECT COUNT(*) as c FROM pricing_items').get().c;
-  if (cnt > 0) return;
+const DEFAULT_PRICING_ITEMS = [
+  { cat: 'professional', name: 'Basic Services of Funeral Director & Staff', desc: 'Overhead, planning, coordination', price: 2500 },
+  { cat: 'professional', name: 'Embalming', desc: 'Standard embalming procedure', price: 895 },
+  { cat: 'professional', name: 'Other Preparation (Hygiene/Cosmetology)', desc: 'Hair styling, makeup, dressing', price: 375 },
+  { cat: 'professional', name: 'Refrigeration', desc: 'Per day', price: 150 },
+  { cat: 'professional', name: 'Death Certificate Filing', desc: 'Certified copies not included', price: 150 },
+  { cat: 'facility', name: 'Visitation / Viewing (1 day)', desc: 'Use of facilities for 4 hours', price: 750 },
+  { cat: 'facility', name: 'Funeral Ceremony (chapel)', desc: 'Use of chapel + staff', price: 950 },
+  { cat: 'facility', name: 'Memorial Service', desc: 'Use of facilities (no body present)', price: 700 },
+  { cat: 'facility', name: 'Graveside Service', desc: 'Equipment + chairs + tent', price: 550 },
+  { cat: 'transportation', name: 'Transfer of Remains (local)', desc: 'Within 25 miles', price: 550 },
+  { cat: 'transportation', name: 'Additional Mileage', desc: 'Per mile over 25', price: 5 },
+  { cat: 'transportation', name: 'Hearse (service)', desc: 'To cemetery/crematory', price: 450 },
+  { cat: 'transportation', name: 'Family Car (limousine)', desc: 'Up to 3 hours', price: 450 },
+  { cat: 'casket', name: 'Bronze Casket - Standard', desc: '18-gauge steel, velvet interior', price: 2995 },
+  { cat: 'casket', name: 'Wood Casket - Oak', desc: 'Solid oak, crepe interior', price: 3995 },
+  { cat: 'casket', name: 'Wood Casket - Mahogany', desc: 'Premium mahogany, velvet interior', price: 5495 },
+  { cat: 'casket', name: 'Steel Casket - Economy', desc: '20-gauge steel', price: 1995 },
+  { cat: 'container', name: 'Concrete Burial Vault', desc: 'Standard', price: 1495 },
+  { cat: 'container', name: 'Steel Burial Vault', desc: 'Premium', price: 2495 },
+  { cat: 'container', name: 'Cremation Container (cardboard)', desc: 'Alternative container', price: 195 },
+  { cat: 'container', name: 'Cremation Container (wood)', desc: 'Wood veneer', price: 495 },
+  { cat: 'cremation', name: 'Direct Cremation', desc: 'Basic cremation without service', price: 995 },
+  { cat: 'cremation', name: 'Cremation with Visitation', desc: 'Viewing + cremation', price: 2995 },
+  { cat: 'cremation', name: 'Urn - Basic', desc: 'Standard cremation urn', price: 295 },
+  { cat: 'cremation', name: 'Urn - Premium', desc: 'Solid brass or wood urn', price: 795 },
+  { cat: 'cemetery', name: 'Cemetery Opening & Closing', desc: 'Standard interment', price: 1200 },
+  { cat: 'cemetery', name: 'Entombment (Mausoleum)', desc: 'Mausoleum placement', price: 1500 },
+  { cat: 'cemetery', name: 'Columbarium Niche', desc: 'Urn placement', price: 800 },
+  { cat: 'merchandise', name: 'Memorial Register Book', desc: 'Hardcover', price: 75 },
+  { cat: 'merchandise', name: 'Memorial Prayer Cards (100)', desc: 'Custom printed', price: 95 },
+  { cat: 'merchandise', name: 'Acknowledgment Cards (50)', desc: 'Thank-you cards', price: 55 },
+  { cat: 'merchandise', name: 'Keepsake Urn Pendant', desc: 'Miniature keepsake', price: 150 },
+];
 
-  const items = [
-    // Professional Services
-    { cat: 'professional', name: 'Basic Services of Funeral Director & Staff', desc: 'Overhead, planning, coordination', price: 2500 },
-    { cat: 'professional', name: 'Embalming', desc: 'Standard embalming procedure', price: 895 },
-    { cat: 'professional', name: 'Other Preparation (Hygiene/Cosmetology)', desc: 'Hair styling, makeup, dressing', price: 375 },
-    { cat: 'professional', name: 'Refrigeration', desc: 'Per day', price: 150 },
-    { cat: 'professional', name: 'Death Certificate Filing', desc: 'Certified copies not included', price: 150 },
-    // Facility
-    { cat: 'facility', name: 'Visitation / Viewing (1 day)', desc: 'Use of facilities for 4 hours', price: 750 },
-    { cat: 'facility', name: 'Funeral Ceremony (chapel)', desc: 'Use of chapel + staff', price: 950 },
-    { cat: 'facility', name: 'Memorial Service', desc: 'Use of facilities (no body present)', price: 700 },
-    { cat: 'facility', name: 'Graveside Service', desc: 'Equipment + chairs + tent', price: 550 },
-    // Transportation
-    { cat: 'transportation', name: 'Transfer of Remains (local)', desc: 'Within 25 miles', price: 550 },
-    { cat: 'transportation', name: 'Additional Mileage', desc: 'Per mile over 25', price: 5 },
-    { cat: 'transportation', name: 'Hearse (service)', desc: 'To cemetery/crematory', price: 450 },
-    { cat: 'transportation', name: 'Family Car (limousine)', desc: 'Up to 3 hours', price: 450 },
-    // Caskets
-    { cat: 'casket', name: 'Bronze Casket — Standard', desc: '18-gauge steel, velvet interior', price: 2995 },
-    { cat: 'casket', name: 'Wood Casket — Oak', desc: 'Solid oak, crepe interior', price: 3995 },
-    { cat: 'casket', name: 'Wood Casket — Mahogany', desc: 'Premium mahogany, velvet interior', price: 5495 },
-    { cat: 'casket', name: 'Steel Casket — Economy', desc: '20-gauge steel', price: 1995 },
-    // Outer Burial Containers
-    { cat: 'container', name: 'Concrete Burial Vault', desc: 'Standard', price: 1495 },
-    { cat: 'container', name: 'Steel Burial Vault', desc: 'Premium', price: 2495 },
-    { cat: 'container', name: 'Cremation Container (cardboard)', desc: 'Alternative container', price: 195 },
-    { cat: 'container', name: 'Cremation Container (wood)', desc: 'Wood veneer', price: 495 },
-    // Cremation
-    { cat: 'cremation', name: 'Direct Cremation', desc: 'Basic cremation without service', price: 995 },
-    { cat: 'cremation', name: 'Cremation with Visitation', desc: 'Viewing + cremation', price: 2995 },
-    { cat: 'cremation', name: 'Urn — Basic', desc: 'Standard cremation urn', price: 295 },
-    { cat: 'cremation', name: 'Urn — Premium', desc: 'Solid brass or wood urn', price: 795 },
-    // Cemetery
-    { cat: 'cemetery', name: 'Cemetery Opening & Closing', desc: 'Standard interment', price: 1200 },
-    { cat: 'cemetery', name: 'Entombment (Mausoleum)', desc: 'Mausoleum placement', price: 1500 },
-    { cat: 'cemetery', name: 'Columbarium Niche', desc: 'Urn placement', price: 800 },
-    // Merchandise
-    { cat: 'merchandise', name: 'Memorial Register Book', desc: 'Hardcover', price: 75 },
-    { cat: 'merchandise', name: 'Memorial Prayer Cards (100)', desc: 'Custom printed', price: 95 },
-    { cat: 'merchandise', name: 'Acknowledgment Cards (50)', desc: 'Thank-you cards', price: 55 },
-    { cat: 'merchandise', name: 'Keepsake Urn Pendant', desc: 'Miniature keepsake', price: 150 },
-  ];
+const DEFAULT_PRICING_PACKAGES = [
+  { name: 'Traditional Burial', desc: 'Full-service traditional burial with visitation, chapel ceremony, and graveside', price: 8995 },
+  { name: 'Simple Cremation', desc: 'Direct cremation with basic container', price: 1495 },
+  { name: 'Cremation with Memorial', desc: 'Cremation with memorial service', price: 4495 },
+  { name: 'Green Burial', desc: 'Natural burial with biodegradable container', price: 3995 },
+];
 
-  const ins = db.prepare(`INSERT INTO pricing_items (id, category, name, description, price) VALUES (?, ?, ?, ?, ?)`);
+function ensureDefaultPricing(organizationId = DEFAULT_ORG_ID) {
+  const itemExists = db.prepare(`SELECT id FROM pricing_items WHERE organization_id = ? AND category = ? AND name = ?`);
+  const insertItem = db.prepare(`INSERT INTO pricing_items (id, organization_id, category, name, description, price) VALUES (?, ?, ?, ?, ?, ?)`);
+  const packageExists = db.prepare(`SELECT id FROM pricing_packages WHERE organization_id = ? AND name = ?`);
+  const insertPackage = db.prepare(`INSERT INTO pricing_packages (id, organization_id, name, description, total_price) VALUES (?, ?, ?, ?, ?)`);
+  let created = 0;
   const tx = db.transaction(() => {
-    for (const item of items) {
-      ins.run(uuidv4(), item.cat, item.name, item.desc, item.price);
+    for (const item of DEFAULT_PRICING_ITEMS) {
+      if (!itemExists.get(organizationId, item.cat, item.name)) {
+        insertItem.run(uuidv4(), organizationId, item.cat, item.name, item.desc, item.price);
+        created++;
+      }
+    }
+    for (const pkg of DEFAULT_PRICING_PACKAGES) {
+      if (!packageExists.get(organizationId, pkg.name)) {
+        insertPackage.run(uuidv4(), organizationId, pkg.name, pkg.desc, pkg.price);
+        created++;
+      }
     }
   });
   tx();
+  return created;
+}
 
-  // Seed default packages
-  const pkgs = [
-    { name: 'Traditional Burial', desc: 'Full-service traditional burial with visitation, chapel ceremony, and graveside', price: 8995 },
-    { name: 'Simple Cremation', desc: 'Direct cremation with basic container', price: 1495 },
-    { name: 'Cremation with Memorial', desc: 'Cremation with memorial service', price: 4495 },
-    { name: 'Green Burial', desc: 'Natural burial with biodegradable container', price: 3995 },
-  ];
-  const insPkg = db.prepare(`INSERT INTO pricing_packages (id, name, description, total_price) VALUES (?, ?, ?, ?)`);
-  const tx2 = db.transaction(() => {
-    for (const p of pkgs) {
-      insPkg.run(uuidv4(), p.name, p.desc, p.price);
-    }
-  });
-  tx2();
-  console.log('✅ Seeded default pricing items and packages');
+function seedPricing() {
+  const orgs = db.prepare('SELECT id FROM organizations').all();
+  let created = 0;
+  for (const org of orgs) created += ensureDefaultPricing(org.id);
+  if (created) console.log(`✅ Seeded ${created} default pricing items/packages`);
 }
 seedPricing();
 
@@ -1088,6 +1089,7 @@ app.post('/api/auth/register', (req, res) => {
     audit(userId, 'register', 'organization', orgId, `Registered ${orgName}`, orgId);
   });
   tx();
+  ensureDefaultPricing(orgId);
 
   const token = crypto.randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 12).toISOString();
@@ -1301,6 +1303,7 @@ app.post('/api/platform/organizations', (req, res) => {
     }
   });
   tx();
+  ensureDefaultPricing(orgId);
   audit(req.user.id, 'create', 'organization', orgId, `Created organization ${name}`, req.organizationId);
   res.json({ id: orgId, name, slug: normalizedSlug, planId: plan.id });
 });
@@ -1361,12 +1364,28 @@ app.put('/api/users/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+app.delete('/api/users/:id', (req, res) => {
+  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin role required' });
+  if (req.params.id === req.user.id) return res.status(400).json({ error: 'You cannot delete your own user.' });
+  const u = db.prepare('SELECT id, email, role FROM users WHERE id = ? AND organization_id = ?').get(req.params.id, req.organizationId);
+  if (!u) return res.status(404).json({ error: 'User not found' });
+  if (u.role === 'admin') {
+    const adminCount = db.prepare(`SELECT COUNT(*) as c FROM users WHERE organization_id = ? AND role = 'admin' AND active = 1`).get(req.organizationId).c;
+    if (adminCount <= 1) return res.status(400).json({ error: 'Keep at least one active admin.' });
+  }
+  db.prepare('DELETE FROM user_sessions WHERE user_id = ?').run(req.params.id);
+  db.prepare('DELETE FROM users WHERE id = ? AND organization_id = ?').run(req.params.id, req.organizationId);
+  audit(req.user.id, 'delete', 'user', req.params.id, `Deleted user ${u.email}`, req.organizationId);
+  res.json({ ok: true });
+});
+
 // ═══════════════════════════════════════════════════════════
 // PART 6 — API Routes: Pricing (GPL / CPL / OBC / Packages)
 // ═══════════════════════════════════════════════════════════
 
 // Get all pricing items (grouped by category for GPL)
 app.get('/api/pricing/items', (req, res) => {
+  ensureDefaultPricing(req.organizationId);
   const items = db.prepare(`SELECT * FROM pricing_items WHERE active = 1 AND organization_id = ? ORDER BY category, name`).all(req.organizationId);
   res.json(items);
 });
@@ -1397,12 +1416,18 @@ app.put('/api/pricing/items/:id', (req, res) => {
 });
 
 app.delete('/api/pricing/items/:id', (req, res) => {
+  const item = db.prepare('SELECT id, name FROM pricing_items WHERE id = ? AND organization_id = ?').get(req.params.id, req.organizationId);
+  if (!item) return res.status(404).json({ error: 'Item not found' });
+  db.prepare('DELETE FROM case_selections WHERE item_id = ?').run(req.params.id);
+  db.prepare('DELETE FROM package_items WHERE item_id = ?').run(req.params.id);
   db.prepare('DELETE FROM pricing_items WHERE id = ? AND organization_id = ?').run(req.params.id, req.organizationId);
+  audit(req.user.id, 'delete', 'pricing_item', req.params.id, item.name, req.organizationId);
   res.json({ ok: true });
 });
 
 // Packages
 app.get('/api/pricing/packages', (req, res) => {
+  ensureDefaultPricing(req.organizationId);
   const pkgs = db.prepare(`SELECT * FROM pricing_packages WHERE active = 1 AND organization_id = ? ORDER BY name`).all(req.organizationId);
   for (const p of pkgs) {
     p.items = db.prepare(`SELECT pi.*, pkg_i.quantity FROM package_items pkg_i JOIN pricing_items pi ON pkg_i.item_id = pi.id WHERE pkg_i.package_id = ? AND pi.organization_id = ?`).all(p.id, req.organizationId);
@@ -1447,9 +1472,10 @@ app.put('/api/pricing/packages/:id', (req, res) => {
 });
 
 app.delete('/api/pricing/packages/:id', (req, res) => {
-  const pkg = db.prepare('SELECT id FROM pricing_packages WHERE id = ? AND organization_id = ?').get(req.params.id, req.organizationId);
+  const pkg = db.prepare('SELECT id, name FROM pricing_packages WHERE id = ? AND organization_id = ?').get(req.params.id, req.organizationId);
   if (pkg) db.prepare('DELETE FROM package_items WHERE package_id = ?').run(req.params.id);
   db.prepare('DELETE FROM pricing_packages WHERE id = ? AND organization_id = ?').run(req.params.id, req.organizationId);
+  if (pkg) audit(req.user.id, 'delete', 'pricing_package', req.params.id, pkg.name, req.organizationId);
   res.json({ ok: true });
 });
 

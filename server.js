@@ -23,6 +23,7 @@ const STRIPE_PRICE_PROFESSIONAL = process.env.STRIPE_PRICE_PROFESSIONAL || '';
 const STRIPE_PRICE_ENTERPRISE = process.env.STRIPE_PRICE_ENTERPRISE || '';
 const AI_DAILY_DOCUMENT_LIMIT = Number(process.env.AI_DAILY_DOCUMENT_LIMIT || 100);
 const AI_MONTHLY_DOCUMENT_HARD_LIMIT = Number(process.env.AI_MONTHLY_DOCUMENT_HARD_LIMIT || 1000);
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || '1551241102@qq.com';
 const AI_REVIEW_NOTICE = 'AI-GENERATED DRAFT — HUMAN REVIEW REQUIRED: Verify every name, date, price, legal statement, and jurisdiction-specific requirement before use. This document is not legal, medical, tax, or regulatory advice.';
 
 // ── Helper: wait for a given ms ──────────────────────────
@@ -2458,7 +2459,7 @@ function legalPage(title, body) {
     h1{font-size:30px;margin-bottom:10px} h2{font-size:18px;margin-top:28px} p,li{font-size:14px;color:#4b5563} ul{padding-left:22px}
     .note{background:#fff8e1;border:1px solid #f0e0a0;border-radius:8px;padding:14px;margin:18px 0;color:#6b4f00}
     a{color:#4338ca}
-  </style></head><body><h1>${escHtml(title)}</h1>${body}<p><a href="/">Return to app</a></p></body></html>`;
+  </style></head><body><h1>${escHtml(title)}</h1>${body}<h2>Contact</h2><p>For support, billing, privacy, or cancellation requests, contact <a href="mailto:${escHtml(SUPPORT_EMAIL)}">${escHtml(SUPPORT_EMAIL)}</a>.</p><p><a href="/">Return to app</a></p></body></html>`;
 }
 
 app.get('/privacy', (req, res) => {

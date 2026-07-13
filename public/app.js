@@ -894,7 +894,7 @@ function openSupportModal() {
       <p class="modal-subtitle">Send a request to the operations team. Include the case name or document type if it helps.</p>
     </div>
     <div class="support-contact-grid">
-      <div><span>Email</span><strong>support@funeralhome.local</strong></div>
+      <div><span>Email</span><strong>1551241102@qq.com</strong></div>
       <div><span>Response target</span><strong>Same business day</strong></div>
     </div>
     <div class="field-row">
